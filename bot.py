@@ -37,8 +37,9 @@ cursor.execute(
                                         "date DATE )")
 
 router = Router()
+dp = Dispatcher()
 
-BOT_TOKEN = "5992895337:AAGs4f43YVZRftOf_Aa75nzATebQRN6uUQg"
+BOT_TOKEN = ""
 bot = Bot(BOT_TOKEN, parse_mode="HTML")
 
 
@@ -242,6 +243,10 @@ async def add_to_db(data: Dict[str, Any]):
 
 @router.callback_query((Text(startswith="1")))
 async def callback(callback_query: types.CallbackQuery):
+    state_with: FSMContext = dp.current_state(user=message.from_user.id)
+    data = await state_with.get_data()
+
+    await add_to_db(data)
     await callback_query.message.delete()
     cursor = base.cursor(buffered=True)
     cursor.execute(
@@ -258,7 +263,6 @@ async def callback(callback_query: types.CallbackQuery):
                                        f"<b>Місто отримувача</b> - {r[6]}\n"
                                        f"<b>Отримувач</b> - {r[7]}\n"
                                        f"<b>Статус</b> - Підтвердженно✅ @{callback_query.from_user.username}")
-    await add_to_db()
 
 
 # @router.message()
@@ -267,7 +271,6 @@ async def callback(callback_query: types.CallbackQuery):
 
 
 async def main() -> None:
-    dp = Dispatcher()
     dp.include_router(router)
     await dp.start_polling(bot)
 
